@@ -1,6 +1,6 @@
 import { LFT630 } from './model/params'
-import { buildLifter } from './model/lifter'
-import { findPart, MACHINE_INFO } from './model/bom'
+import { buildAstraLifter } from './model/astra'
+import { findPart } from './model/bom'
 import { liftRestT, reelAngle, type PoseState } from './model/kinematics'
 import type { GroupId } from './model/types'
 import { createViewer, type ViewPreset } from './three/viewer'
@@ -16,7 +16,8 @@ const $ = <T extends HTMLElement>(sel: string): T => {
 }
 
 const params = LFT630
-const spec = buildLifter(params)
+const spec = buildAstraLifter()
+$<HTMLElement>('#modelStatus').textContent = 'Astra 재구성 · 형상/재질/동작 추정 · 실물 검증 전'
 
 const canvas3d = $<HTMLCanvasElement>('#canvas3d')
 const canvas2d = $<HTMLCanvasElement>('#canvas2d')
@@ -96,7 +97,15 @@ renderBom(bomEl, spec, {
     viewer.setVisibleGroups(visibleSet)
   },
 })
-renderSpecs($<HTMLTableElement>('#specs'), MACHINE_INFO.specs)
+renderSpecs($<HTMLTableElement>('#specs'), [
+  ['핸들 중심선 높이', '2,127 mm'],
+  ['바퀴 외측 길이 / 폭', '1,072 / 875 mm'],
+  ['스핀들 축 높이', '527 mm'],
+  ['릴 플랜지 / 외측 디스크', 'Ø610 / Ø710 mm'],
+  ['플랜지 바깥면 간격', '400 mm'],
+  ['상부 플레이트 폭', '525 mm'],
+  ['동작 범위 / 속도', '시연용 가정값'],
+])
 viewer.onPick(select)
 setPose({})
 

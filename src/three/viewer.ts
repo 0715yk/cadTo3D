@@ -88,7 +88,11 @@ export const createViewer = (canvas: HTMLCanvasElement, spec: AssemblySpec, para
   const radius = size.length() / 2
   let explodeFactor = 0
 
-  const distanceFor = () => ((radius * (1 + explodeFactor * 0.55)) / Math.sin(THREE.MathUtils.degToRad(camera.fov) / 2)) * 0.9
+  const distanceFor = () => {
+    const halfVerticalFov = THREE.MathUtils.degToRad(camera.fov) / 2
+    const halfFov = Math.atan(Math.tan(halfVerticalFov) * Math.min(camera.aspect, 1))
+    return radius * (1 + explodeFactor * 0.55) / Math.sin(halfFov) * 1.05
+  }
 
   const setView = (preset: ViewPreset) => {
     const d = distanceFor()
@@ -107,9 +111,11 @@ export const createViewer = (canvas: HTMLCanvasElement, spec: AssemblySpec, para
   const resize = () => {
     const { clientWidth: w, clientHeight: h } = canvas
     if (w === 0 || h === 0) return
+    const previousDistance = distanceFor()
     renderer.setSize(w, h, false)
     camera.aspect = w / h
     camera.updateProjectionMatrix()
+    camera.position.sub(controls.target).multiplyScalar(distanceFor() / previousDistance).add(controls.target)
   }
   const ro = new ResizeObserver(resize)
   ro.observe(canvas)

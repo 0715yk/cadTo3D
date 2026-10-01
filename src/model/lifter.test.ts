@@ -5,8 +5,56 @@ import { boundsOf, shapeBounds, cylX, box, torusArc } from './shapes'
 import { explodeOffset, groupTranslation, liftOffset, liftRestT, reelAngle, LIFTED_GROUPS } from './kinematics'
 import { buildBom, findPart } from './bom'
 import { demoLiftAt } from '../ui/demo'
+import { ASTRA_DIMENSIONS, buildAstraLifter } from './astra'
 
 const spec = buildLifter(LFT630)
+
+describe('Astra reconstruction contracts (not CAD accuracy)', () => {
+  const astra = buildAstraLifter()
+
+  it('is deterministic and has distinct part ids and finite positive geometry', () => {
+    expect(buildAstraLifter()).toEqual(astra)
+    expect(new Set(astra.parts.map((part) => part.id)).size).toBe(astra.parts.length)
+    for (const part of astra.parts) {
+      expect(part.id.startsWith('astra-')).toBe(true)
+      for (const shape of part.shapes) {
+        const bounds = shapeBounds(shape)
+        bounds.min.forEach((minimum, axis) => {
+          expect(Number.isFinite(minimum)).toBe(true)
+          expect(Number.isFinite(bounds.max[axis])).toBe(true)
+          expect(bounds.max[axis]).toBeGreaterThan(minimum)
+        })
+      }
+    }
+  })
+
+  it('preserves labeled wheel diameter, wheelbase and outer width', () => {
+    const wheels = astra.parts.filter((part) => /^astra-wheel-\d--?1$/.test(part.id))
+    expect(wheels).toHaveLength(4)
+    const bounds = boundsOf(wheels.flatMap((part) => part.shapes))
+    expect(bounds.min[1]).toBe(0)
+    expect(bounds.max[1]).toBe(152)
+    expect(bounds.max[0] - bounds.min[0]).toBe(1072)
+    expect(bounds.max[2] - bounds.min[2]).toBe(875)
+  })
+
+  it('preserves labeled reel diameter, width and spindle height', () => {
+    const flanges = astra.parts.filter((part) => part.id.startsWith('astra-reel-flange'))
+    const bounds = boundsOf(flanges.flatMap((part) => part.shapes))
+    expect(bounds.max[0] - bounds.min[0]).toBe(400)
+    expect(bounds.max[1] - bounds.min[1]).toBe(610)
+    expect((bounds.min[1] + bounds.max[1]) / 2).toBe(527)
+    expect(ASTRA_DIMENSIONS.labeled.handleCenterHeight).toBe(2127)
+    for (const part of astra.parts.filter((part) => part.group === 'reel')) {
+      expect(part.spin).toEqual({ axis: 'x', pivot: [0, 527, 0] })
+    }
+  })
+
+  it('does not mutate the original assembly', () => {
+    buildAstraLifter()
+    expect(buildLifter(LFT630)).toEqual(spec)
+  })
+})
 
 describe('shapes', () => {
   it('cylinder bounds along x', () => {

@@ -21,8 +21,9 @@
 
       <main class="workspace">
         <section class="stage">
-          <canvas id="canvas3d" class="stage__canvas"></canvas>
-          <canvas id="canvas2d" class="stage__canvas is-hidden"></canvas>
+          <canvas id="canvas3d" class="stage__canvas" aria-label="기계 3D 모델"></canvas>
+          <canvas id="canvas2d" class="stage__canvas is-hidden" aria-label="원본 2D 도면"></canvas>
+          <div id="modelStatus" class="model-status" role="status"></div>
           <div id="stageHint" class="stage__hint">드래그: 회전 · 휠: 줌 · 우클릭 드래그: 이동 · 부품 클릭: 정보</div>
         </section>
 
@@ -58,7 +59,7 @@
           </section>
 
           <section class="card card--grow">
-            <h2>부품 구성 (BOM)</h2>
+            <h2>모델 부품 구성</h2>
             <div id="bom" class="bom"></div>
           </section>
 
