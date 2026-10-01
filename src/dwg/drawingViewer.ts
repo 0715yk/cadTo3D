@@ -111,19 +111,56 @@ export const createDrawingViewer = (canvas: HTMLCanvasElement, drawing: Drawing2
     view = zoomAt(view, e.clientX - rect.left, e.clientY - rect.top, e.deltaY < 0 ? 1.15 : 1 / 1.15)
     dirty = true
   }
-  let last: { x: number; y: number } | null = null
+
+  // Active touch/mouse pointers for pan (1 pointer) and pinch-zoom (2 pointers).
+  const pointers = new Map<number, { x: number; y: number }>()
+  let pinchDist = 0
+  let pinchMid: { x: number; y: number } | null = null
+  const local = (e: PointerEvent) => {
+    const rect = canvas.getBoundingClientRect()
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top }
+  }
+
   const onDown = (e: PointerEvent) => {
-    last = { x: e.clientX, y: e.clientY }
-    canvas.setPointerCapture(e.pointerId)
+    try {
+      canvas.setPointerCapture(e.pointerId)
+    } catch {
+      // ignore: pointer may already be released
+    }
+    pointers.set(e.pointerId, local(e))
+    if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()]
+      pinchDist = Math.hypot(a.x - b.x, a.y - b.y)
+      pinchMid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+    }
   }
   const onMove = (e: PointerEvent) => {
-    if (!last) return
-    view = panBy(view, e.clientX - last.x, e.clientY - last.y)
-    last = { x: e.clientX, y: e.clientY }
-    dirty = true
+    const prev = pointers.get(e.pointerId)
+    if (!prev) return
+    const cur = local(e)
+    pointers.set(e.pointerId, cur)
+    if (pointers.size >= 2) {
+      const [a, b] = [...pointers.values()]
+      const dist = Math.hypot(a.x - b.x, a.y - b.y)
+      const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+      if (pinchDist > 0) {
+        if (dist > 0) view = zoomAt(view, mid.x, mid.y, dist / pinchDist)
+        if (pinchMid) view = panBy(view, mid.x - pinchMid.x, mid.y - pinchMid.y)
+        dirty = true
+      }
+      pinchDist = dist
+      pinchMid = mid
+    } else {
+      view = panBy(view, cur.x - prev.x, cur.y - prev.y)
+      dirty = true
+    }
   }
-  const onUp = () => {
-    last = null
+  const onUp = (e: PointerEvent) => {
+    pointers.delete(e.pointerId)
+    if (pointers.size < 2) {
+      pinchDist = 0
+      pinchMid = null
+    }
   }
   const onDbl = () => fit()
 
