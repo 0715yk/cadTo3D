@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>610 LIFTER · 3D 시연 — (주)진양기계제작소</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand__company">(주)진양기계제작소</span>
+          <h1 class="brand__title">610 LIFTER <span class="brand__sub">CROSS HEAD PART ASS'Y · LFT-630-00-00</span></h1>
+        </div>
+        <nav class="tabs" role="tablist">
+          <button class="tab is-active" data-tab="3d" role="tab">3D 뷰</button>
+          <button class="tab" data-tab="2d" role="tab">2D 도면</button>
+        </nav>
+      </header>
+
+      <main class="workspace">
+        <section class="stage">
+          <canvas id="canvas3d" class="stage__canvas"></canvas>
+          <canvas id="canvas2d" class="stage__canvas is-hidden"></canvas>
+          <div id="stageHint" class="stage__hint">드래그: 회전 · 휠: 줌 · 우클릭 드래그: 이동 · 부품 클릭: 정보</div>
+        </section>
+
+        <aside class="panel">
+          <section class="card">
+            <h2>뷰</h2>
+            <div class="btn-row" id="viewButtons">
+              <button data-view="iso">등각</button>
+              <button data-view="front">정면</button>
+              <button data-view="side">측면</button>
+              <button data-view="back">후면</button>
+              <button data-view="top">상면</button>
+            </div>
+            <label class="toggle"><input type="checkbox" id="autoRotate" /> 자동 회전</label>
+          </section>
+
+          <section class="card">
+            <h2>동작 시연</h2>
+            <label class="slider">
+              <span>리프트 <output id="liftOut">0</output></span>
+              <input type="range" id="lift" min="0" max="1000" step="1" />
+            </label>
+            <label class="toggle"><input type="checkbox" id="reelSpin" /> 릴 회전 (스핀들 모터)</label>
+            <button id="demoBtn" class="primary">자동 시연 시작</button>
+          </section>
+
+          <section class="card">
+            <h2>분해도</h2>
+            <label class="slider">
+              <span>분해 정도 <output id="explodeOut">0%</output></span>
+              <input type="range" id="explode" min="0" max="1000" step="1" value="0" />
+            </label>
+          </section>
+
+          <section class="card card--grow">
+            <h2>부품 구성 (BOM)</h2>
+            <div id="bom" class="bom"></div>
+          </section>
+
+          <section class="card" id="partInfo">
+            <h2>선택 부품</h2>
+            <p class="muted">3D 뷰에서 부품을 클릭하거나 목록에서 선택하세요.</p>
+          </section>
+
+          <section class="card">
+            <h2>사양</h2>
+            <table class="specs" id="specs"></table>
+          </section>
+        </aside>
+      </main>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
